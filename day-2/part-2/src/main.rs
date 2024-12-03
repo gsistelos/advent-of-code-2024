@@ -14,10 +14,37 @@ fn main() {
     for report in reports {
         if is_safe(&report) {
             safe += 1;
+            continue;
+        }
+
+        for (except_idx, _) in report.iter().enumerate() {
+            let new_report: Vec<u32> = new_vec_except(&report, except_idx);
+
+            if is_safe(&new_report) {
+                safe += 1;
+                break;
+            }
         }
     }
 
     println!("{safe}");
+}
+
+fn new_vec_except<T>(report: &Vec<T>, except_idx: usize) -> Vec<T>
+where
+    T: Copy,
+{
+    let mut new_report: Vec<T> = Vec::new();
+
+    for (idx, level) in report.iter().enumerate() {
+        if idx == except_idx {
+            continue;
+        }
+
+        new_report.push(*level);
+    }
+
+    new_report
 }
 
 fn is_safe(report: &Vec<u32>) -> bool {
