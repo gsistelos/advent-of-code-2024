@@ -19,13 +19,7 @@ fn main() {
     let difference: u32 = left_list
         .iter()
         .zip(right_list.iter())
-        .map(|(&left, &right)| {
-            if left >= right {
-                left - right
-            } else {
-                right - left
-            }
-        })
+        .map(|(&left, &right)| left.abs_diff(right))
         .sum();
 
     println!("{difference}");
