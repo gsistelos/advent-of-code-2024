@@ -2,7 +2,6 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Lines};
 use std::path::Path;
-use std::process::exit;
 use std::str::FromStr;
 
 fn main() {
@@ -86,10 +85,7 @@ where
 {
     let file = match File::open(&filename) {
         Ok(file) => file,
-        Err(e) => {
-            eprintln!("{filename}: {e}");
-            exit(2);
-        }
+        Err(e) => panic!("{filename}: {e}"),
     };
 
     BufReader::new(file).lines()
