@@ -10,9 +10,9 @@ fn main() {
     let mut left_list: Vec<u32> = Vec::new();
     let mut right_list: Vec<u32> = Vec::new();
 
-    parse_lines(lines, |item| {
-        parse_item(item, &mut left_list);
-        parse_item(item, &mut right_list);
+    parse_lines(lines, |items| {
+        left_list.push(parse_item(&mut items.next()));
+        right_list.push(parse_item(&mut items.next()));
     });
 
     left_list.sort();
@@ -31,21 +31,19 @@ fn main() {
     println!("{difference}");
 }
 
-fn parse_item<'a, T, U>(it: &mut T, list: &mut Vec<U>)
+fn parse_item<T>(opt: &mut Option<&str>) -> T
 where
-    T: Iterator<Item = &'a str>,
-    U: FromStr,
-    <U>::Err: Display,
+    T: FromStr,
+    <T>::Err: Display,
 {
-    if let Some(item) = it.next() {
-        let value = match item.parse() {
-            Ok(v) => v,
-            Err(e) => panic!("{e}: Input error"),
-        };
+    let item = match opt {
+        Some(v) => v,
+        None => panic!("Input error"),
+    };
 
-        list.push(value);
-    } else {
-        panic!("Input error");
+    match item.parse() {
+        Ok(v) => v,
+        Err(e) => panic!("{e}: Input error"),
     }
 }
 
