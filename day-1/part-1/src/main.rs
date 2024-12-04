@@ -2,12 +2,18 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Lines};
 use std::path::Path;
-use std::str::FromStr;
+use std::str::{FromStr, SplitWhitespace};
 
 fn main() {
     let lines = read_lines("../input.txt");
 
-    let (mut left_list, mut right_list): (Vec<u32>, Vec<u32>) = parse_lines(lines);
+    let mut left_list: Vec<u32> = Vec::new();
+    let mut right_list: Vec<u32> = Vec::new();
+
+    parse_lines(lines, |item| {
+        parse_item(item, &mut left_list);
+        parse_item(item, &mut right_list);
+    });
 
     left_list.sort();
     right_list.sort();
@@ -43,34 +49,17 @@ where
     }
 }
 
-fn parse_line<T>(line: &str, left_list: &mut Vec<T>, right_list: &mut Vec<T>)
-where
-    T: FromStr,
-    <T>::Err: Display,
-{
-    let mut pair = line.split_whitespace();
-
-    parse_item(&mut pair, left_list);
-    parse_item(&mut pair, right_list);
-}
-
-fn parse_lines<T, U>(lines: T) -> (Vec<U>, Vec<U>)
+fn parse_lines<T, F>(lines: T, mut f: F)
 where
     T: Iterator<Item = Result<String, Error>>,
-    U: FromStr,
-    <U>::Err: Display,
+    F: FnMut(&mut SplitWhitespace),
 {
-    let mut left_list: Vec<U> = Vec::new();
-    let mut right_list: Vec<U> = Vec::new();
-
     for line in lines {
         match line {
-            Ok(s) => parse_line(s.as_ref(), &mut left_list, &mut right_list),
+            Ok(s) => f(&mut s.split_whitespace()),
             Err(e) => panic!("{e}"),
         };
     }
-
-    (left_list, right_list)
 }
 
 fn read_lines<P>(filename: P) -> Lines<BufReader<File>>
