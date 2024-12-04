@@ -2,12 +2,18 @@ use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Error, Lines};
 use std::path::Path;
-use std::str::FromStr;
+use std::str::{FromStr, SplitWhitespace};
 
 fn main() {
     let lines = read_lines("../input.txt");
 
-    let reports: Vec<Vec<u32>> = parse_lines(lines);
+    let mut reports: Vec<Vec<u32>> = Vec::new();
+
+    parse_lines(lines, |items| {
+        let report: Vec<u32> = parse_items(items);
+
+        reports.push(report);
+    });
 
     let mut safe = 0;
 
@@ -63,23 +69,21 @@ fn is_increasing<T>(report: &Vec<T>) -> bool
 where
     T: PartialOrd,
 {
-    if let Some(levels) = report.windows(2).next() {
-        if levels[0] > levels[1] {
-            return false;
-        }
-    } else {
-        panic!("Input error");
-    }
+    let levels = match report.windows(2).next() {
+        Some(levels) => levels,
+        None => panic!("Input error"),
+    };
 
-    true
+    levels[0] < levels[1]
 }
 
-fn parse_line<T>(line: &str, report: &mut Vec<T>)
+fn parse_items<'a, T, U>(items: T) -> Vec<U>
 where
-    T: FromStr,
-    <T>::Err: Display,
+    T: Iterator<Item = &'a str>,
+    U: FromStr,
+    <U>::Err: Display,
 {
-    let items = line.split_whitespace();
+    let mut parsed: Vec<U> = Vec::new();
 
     for item in items {
         let value = match item.parse() {
@@ -87,30 +91,23 @@ where
             Err(e) => panic!("{e}: Input error"),
         };
 
-        report.push(value);
+        parsed.push(value);
     }
+
+    parsed
 }
 
-fn parse_lines<T, U>(lines: T) -> Vec<Vec<U>>
+fn parse_lines<T, F>(lines: T, mut f: F)
 where
     T: Iterator<Item = Result<String, Error>>,
-    U: FromStr,
-    U::Err: Display,
+    F: FnMut(&mut SplitWhitespace),
 {
-    let mut reports: Vec<Vec<U>> = Vec::new();
-
     for line in lines {
-        let mut report = Vec::new();
-
         match line {
-            Ok(s) => parse_line(s.as_ref(), &mut report),
+            Ok(s) => f(&mut s.split_whitespace()),
             Err(e) => panic!("{e}"),
         };
-
-        reports.push(report);
     }
-
-    reports
 }
 
 fn read_lines<P>(filename: P) -> Lines<BufReader<File>>
